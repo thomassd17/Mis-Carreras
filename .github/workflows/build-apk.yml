@@ -4,6 +4,11 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  UV_PYTHON: 3.14
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+
 jobs:
   build:
     name: Build APK
@@ -13,19 +18,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Build app
-        id: build
-        uses: flet-dev/flet-build-action@v1
-        with:
-          target: apk
-          runner-python-version: "3.14"
-          bundled-python-version: "3.14"
-          build-number: ${{ github.run_number }}
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
 
-      - name: Upload build archive
+      - name: Build app
+        shell: bash
+        run: |
+          uv run flet build apk --yes --verbose
+
+      - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
-          path: ${{ steps.build.outputs.archive-path }}
-          archive: false
+          name: apk-build
+          path: build/apk
           if-no-files-found: error
           overwrite: false
